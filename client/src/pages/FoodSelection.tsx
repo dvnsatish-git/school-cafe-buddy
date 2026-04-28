@@ -103,6 +103,18 @@ export default function FoodSelection() {
     },
   });
 
+  const triggerUnhealthyAlert = (food: FoodItem) => {
+    const rec = getRecommendationForFood(food.name);
+    setCurrentRecommendation(rec.message);
+    setCurrentAlternatives(rec.alternatives);
+    setPendingUnhealthyFoodId(food.id);
+    setShowRecommendation(true);
+    const alertMsg = getBuddyMessage("addUnhealthy", { food: food.name });
+    setVoiceMessage(alertMsg);
+    speakMessage(alertMsg);
+    setTimeout(() => setVoiceMessage(null), 5000);
+  };
+
   const handleFoodSelect = (food: FoodItem) => {
     const isSelected = selectedFoods.some(f => f.id === food.id);
 
@@ -110,24 +122,54 @@ export default function FoodSelection() {
       setSelectedFoods(prev => prev.filter(f => f.id !== food.id));
     } else {
       setSelectedFoods(prev => [...prev, food]);
-      setBuddyState(food.isHealthy ? "happy" : "thinking");
-      setTimeout(() => setBuddyState("idle"), 1800);
 
-      if (!food.isHealthy) {
-        const rec = getRecommendationForFood(food.name);
-        setCurrentRecommendation(rec.message);
-        setCurrentAlternatives(rec.alternatives);
-        setPendingUnhealthyFoodId(food.id);
-        setShowRecommendation(true);
+      if (food.isHealthy) {
+        setBuddyState("happy");
+        const msg = getBuddyMessage("addHealthy", { points: food.points });
+        setVoiceMessage(msg);
+        speakMessage(msg);
+        setTimeout(() => { setBuddyState("idle"); setVoiceMessage(null); }, 3500);
+      } else {
+        setBuddyState("thinking");
+        setTimeout(() => setBuddyState("idle"), 1800);
+        triggerUnhealthyAlert(food);
       }
     }
   };
 
+  const CHECKOUT_PHRASES = [
+    "checkout", "check out", "pay", "place order", "done", "that's all",
+    "i'm ready", "ready to pay", "ready to checkout", "ready to check out",
+    "finish", "complete", "submit", "confirm",
+  ];
+
   const handleVoiceOrder = (transcript: string) => {
     if (!data?.foods) return;
     const words = transcript.toLowerCase();
-    const matched: FoodItem[] = [];
 
+    // Checkout intent detection
+    if (CHECKOUT_PHRASES.some(phrase => words.includes(phrase))) {
+      if (selectedFoods.length === 0) {
+        const msg = "Your cart is empty! Add some food first.";
+        setVoiceMessage(msg);
+        speakMessage(msg);
+        setTimeout(() => setVoiceMessage(null), 3000);
+        return;
+      }
+      const msg = getBuddyMessage("readyCheckout");
+      setVoiceMessage(msg);
+      speakMessage(msg);
+      setBuddyState("excited");
+      setTimeout(() => {
+        setVoiceMessage(null);
+        setBuddyState("idle");
+        setShowCheckout(true);
+      }, 1800);
+      return;
+    }
+
+    // Food matching
+    const matched: FoodItem[] = [];
     data.foods.forEach(food => {
       if (words.includes(food.name.toLowerCase())) {
         if (!selectedFoods.some(f => f.id === food.id)) {
@@ -138,16 +180,28 @@ export default function FoodSelection() {
 
     if (matched.length > 0) {
       setSelectedFoods(prev => [...prev, ...matched]);
+
+      // Handle unhealthy foods added by voice
+      const unhealthy = matched.find(f => !f.isHealthy);
+      if (unhealthy) {
+        setBuddyState("thinking");
+        setTimeout(() => setBuddyState("idle"), 1800);
+        triggerUnhealthyAlert(unhealthy);
+        return;
+      }
+
+      // Healthy foods — announce points
       setBuddyState("excited");
-      setTimeout(() => setBuddyState("idle"), 1800);
-      const names = matched.map(f => f.name).join(", ");
-      const msg = `Got it! ${names} added! ${getBuddyMessage("addHealthy")}`;
+      const totalPts = matched.reduce((sum, f) => sum + f.points, 0);
+      const names = matched.map(f => f.name).join(" and ");
+      const msg = getBuddyMessage("addHealthy", { points: totalPts }).replace("That", `${names}! That`);
       setVoiceMessage(msg);
       speakMessage(msg);
-      setTimeout(() => setVoiceMessage(null), 4000);
+      setTimeout(() => { setBuddyState("idle"); setVoiceMessage(null); }, 4000);
     } else {
-      const msg = `Hmm, I didn't catch that. Try saying a food name like "apple" or "milk"!`;
+      const msg = getBuddyMessage("voiceNoMatch");
       setVoiceMessage(msg);
+      speakMessage(msg);
       setBuddyState("thinking");
       setTimeout(() => { setVoiceMessage(null); setBuddyState("idle"); }, 3500);
     }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 
 export type BuddyId = "foxy" | "mochi" | "biscuit" | "zap" | "ribbit";
 export type BuddyState = "idle" | "happy" | "excited" | "thinking" | "sad";
@@ -64,39 +64,49 @@ export const BUDDIES: Buddy[] = [
 
 export const BUDDY_MESSAGES: Record<BuddyId, Record<string, string>> = {
   foxy: {
-    morning: "Good morning, clever one! Let's outsmart those snack cravings today! 🦊✨",
-    addHealthy: "Sly choice! That's +10 points in your pocket! 🦊💪",
-    addUnhealthy: "Ooh sneaky pick! How about something that powers you up too? 🦊🥕",
-    checkout: "Mission complete! You're on a roll! 🦊🔥",
-    lowBudget: "Heads up, smart one! Budget getting low. Water is free at the fountain! 🦊💧",
+    morning: "Good morning, clever one! Let's outsmart those snack cravings today!",
+    addHealthy: "Sly choice! You just earned {points} points. Keep it up!",
+    addUnhealthy: "Ooh, {food}! Smart move — but how about swapping it for something that gives you more energy?",
+    checkout: "Mission complete! Great meal today. You are on a roll!",
+    lowBudget: "Heads up! Budget getting low. Water is free at the fountain!",
+    readyCheckout: "Alright! Let me pull up your order. Ready to pay!",
+    voiceNoMatch: "Hmm, I did not catch that food name. Try saying something like apple or milk.",
   },
   mochi: {
-    morning: "Good morning~ Ready for a soft, cozy, healthy day? 🐱🌸",
-    addHealthy: "So lovely~ that's a wonderful choice! ✨🌸",
-    addUnhealthy: "Hmm... how about we add something gentle for your tummy too? 🐱🥦",
-    checkout: "Beautiful choices today~ 🐱💜",
-    lowBudget: "Softly now~ your budget is getting low! 🐱💧",
+    morning: "Good morning. Ready for a soft, cozy, healthy day?",
+    addHealthy: "So lovely. That earned you {points} beautiful points!",
+    addUnhealthy: "{food} looks yummy! But how about we add something gentle for your tummy too?",
+    checkout: "Beautiful choices today. Your tummy will be so happy!",
+    lowBudget: "Gently now, your budget is getting low. Water is free at the fountain!",
+    readyCheckout: "Okay, let us check out now. Looking good!",
+    voiceNoMatch: "Hmm, I did not quite hear that. Could you say the food name again?",
   },
   biscuit: {
-    morning: "GOOD MORNING!!! LET'S EAT AMAZING FOOD TODAY WOOHOO!!! 🐶🎉",
-    addHealthy: "YES YES YES!!! That's SO GOOD!!! +10 points BOOM!!! 🐶⚡",
-    addUnhealthy: "OOH CHIPS! How about adding some carrots too?! DOUBLE WIN!!! 🐶🥕",
-    checkout: "AMAZING MEAL!!! YOU'RE THE BEST!!! 🐶🏆",
-    lowBudget: "WHOA budget alert!! Water is FREE at the fountain!! 🐶💧",
+    morning: "GOOD MORNING! Let us eat amazing food today, woohoo!",
+    addHealthy: "YES YES YES! That is SO GOOD! You just earned {points} whole points, BOOM!",
+    addUnhealthy: "Oh! {food}! How about adding some carrots too? Double win!",
+    checkout: "Amazing meal! You are the best! Let us go pay!",
+    lowBudget: "Whoa, budget alert! Water is FREE at the fountain!",
+    readyCheckout: "CHECKOUT TIME! Let us go go go!",
+    voiceNoMatch: "Woof! I did not hear a food name. Try saying apple or sandwich!",
   },
   zap: {
-    morning: "System online. Nutrition mission initiated. Let's optimize today's fuel! 🤖⚡",
-    addHealthy: "Calculating... +10 points added. Optimal choice confirmed! 🤖✅",
-    addUnhealthy: "Warning: snack detected. Recommend adding protein or veggie for balance. 🤖🥦",
-    checkout: "Transaction complete. Nutrition score: excellent! 🤖🏆",
-    lowBudget: "Budget alert: 20% remaining. Water costs 0 credits at the fountain. 🤖💧",
+    morning: "System online. Nutrition mission initiated. Let us optimize today's fuel.",
+    addHealthy: "Calculating. {points} points added to your total. Optimal choice confirmed.",
+    addUnhealthy: "Warning. {food} detected. Recommend adding a protein or vegetable for balance.",
+    checkout: "Transaction complete. Nutrition score: excellent.",
+    lowBudget: "Budget alert. Twenty percent remaining. Water costs zero credits at the fountain.",
+    readyCheckout: "Initiating checkout sequence. Processing your order now.",
+    voiceNoMatch: "Input not recognized. Please state a valid food item name.",
   },
   ribbit: {
-    morning: "Ribbit ribbit! Ready to hop into a veggie-filled day? 🐸🥦",
-    addHealthy: "RIBBIT! That's a ribbiting choice! +10 points! 🐸🎉",
-    addUnhealthy: "Heh, that's a frog-tastic snack! Want some veggies on the side? 🐸🥕",
-    checkout: "Ribbit ribbit! Meal approved by the veggie council! 🐸👑",
-    lowBudget: "Uh oh, your wallet is as empty as a dried-up pond! Drink free water! 🐸💧",
+    morning: "Ribbit ribbit! Ready to hop into a veggie-filled day?",
+    addHealthy: "Ribbit! That is a ribbiting choice! You earned {points} points, hop hop!",
+    addUnhealthy: "Ooh, {food}! That is frog-tastic, but want some veggies on the side?",
+    checkout: "Ribbit ribbit! Meal approved by the veggie council!",
+    lowBudget: "Uh oh, your wallet is as empty as a dried-up pond! Drink free water!",
+    readyCheckout: "Ribbit! Off to the checkout pond we go!",
+    voiceNoMatch: "Ribbit? I did not hear a food name. Try saying broccoli or apple!",
   },
 };
 
@@ -111,7 +121,7 @@ interface BuddyContextType {
   setAppMode: (mode: AppMode) => void;
   setStudentName: (name: string) => void;
   completeOnboarding: (buddyId: BuddyId, name: string, mode: AppMode) => void;
-  getBuddyMessage: (key: string) => string;
+  getBuddyMessage: (key: string, vars?: Record<string, string | number>) => string;
   speakMessage: (text: string) => void;
 }
 
@@ -133,6 +143,14 @@ export function BuddyProvider({ children }: { children: ReactNode }) {
   });
 
   const selectedBuddy = BUDDIES.find(b => b.id === selectedBuddyId) || BUDDIES[0];
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+
+  useEffect(() => {
+    const load = () => { voicesRef.current = window.speechSynthesis.getVoices(); };
+    load();
+    window.speechSynthesis.addEventListener("voiceschanged", load);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", load);
+  }, []);
 
   const setBuddy = (id: BuddyId) => {
     setSelectedBuddyId(id);
@@ -157,19 +175,46 @@ export function BuddyProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("hasOnboarded", "true");
   };
 
-  const getBuddyMessage = (key: string): string => {
-    return BUDDY_MESSAGES[selectedBuddyId]?.[key] || BUDDY_MESSAGES.foxy[key] || "";
+  const getBuddyMessage = (key: string, vars?: Record<string, string | number>): string => {
+    let msg = BUDDY_MESSAGES[selectedBuddyId]?.[key] || BUDDY_MESSAGES.foxy[key] || "";
+    if (vars) {
+      Object.entries(vars).forEach(([k, v]) => {
+        msg = msg.replace(`{${k}}`, String(v));
+      });
+    }
+    return msg;
   };
 
   const speakMessage = (text: string) => {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
-    // Strip emoji by removing characters outside the Basic Multilingual Plane
     const clean = text.replace(/[^\x00-\x7FÀ-ɏ ]/g, "").trim();
     const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.rate = selectedBuddyId === "biscuit" ? 1.2 : selectedBuddyId === "mochi" ? 0.85 : 1.0;
-    utterance.pitch = selectedBuddyId === "zap" ? 0.7 : selectedBuddyId === "biscuit" ? 1.3 : 1.1;
-    utterance.volume = 0.9;
+
+    const voices = voicesRef.current;
+
+    // Per-buddy voice config — dramatic differences so kids can tell them apart
+    const voiceConfig: Record<BuddyId, { rate: number; pitch: number; preferKeywords: string[] }> = {
+      foxy:    { rate: 1.05, pitch: 1.15, preferKeywords: ["Google US English", "Samantha", "Karen"] },
+      mochi:   { rate: 0.78, pitch: 1.35, preferKeywords: ["Google UK English Female", "Tessa", "Fiona", "Moira"] },
+      biscuit: { rate: 1.45, pitch: 1.55, preferKeywords: ["Google US English", "Samantha", "Zira"] },
+      zap:     { rate: 0.88, pitch: 0.40, preferKeywords: ["Google UK English Male", "Daniel", "David", "Alex"] },
+      ribbit:  { rate: 0.95, pitch: 0.80, preferKeywords: ["Google Australian English", "Lee", "Rishi", "Trinoids"] },
+    };
+
+    const cfg = voiceConfig[selectedBuddyId];
+    utterance.rate = cfg.rate;
+    utterance.pitch = cfg.pitch;
+    utterance.volume = 0.95;
+
+    // Pick the best matching voice available
+    if (voices.length > 0) {
+      const match = cfg.preferKeywords
+        .map(kw => voices.find(v => v.name.includes(kw)))
+        .find(Boolean);
+      if (match) utterance.voice = match;
+    }
+
     window.speechSynthesis.speak(utterance);
   };
 
