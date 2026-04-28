@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBuddy, BuddyState } from "@/context/BuddyContext";
-import { X, Volume2 } from "lucide-react";
+import { ChangeBuddySheet } from "@/components/ChangeBuddySheet";
+import { X, Volume2, RefreshCw } from "lucide-react";
 
 const STATE_ANIMATION: Record<BuddyState, string> = {
   idle: "animate-buddy-bob",
@@ -55,6 +56,19 @@ export function BuddyBubble() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+      {/* Change buddy button — small, above the bubble */}
+      <ChangeBuddySheet
+        trigger={
+          <button
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-display font-semibold text-white shadow transition-all hover:opacity-90 active:scale-95"
+            style={{ backgroundColor: `${selectedBuddy.color}cc` }}
+            title="Change buddy"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Change
+          </button>
+        }
+      />
       <AnimatePresence>
         {showMessage && (
           <motion.div

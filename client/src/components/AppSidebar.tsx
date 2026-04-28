@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { 
-  Sidebar, 
-  SidebarContent, 
+import {
+  Sidebar,
+  SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -11,7 +11,9 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Home, UtensilsCrossed, Award, Wallet, Sparkles } from "lucide-react";
+import { Home, UtensilsCrossed, Award, Wallet, RefreshCw } from "lucide-react";
+import { useBuddy } from "@/context/BuddyContext";
+import { ChangeBuddySheet } from "@/components/ChangeBuddySheet";
 import schoolLogo from "@assets/IMG_4145_1768935229434.jpeg";
 
 const menuItems = [
@@ -23,6 +25,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const { selectedBuddy } = useBuddy();
 
   return (
     <Sidebar collapsible="icon">
@@ -69,13 +72,31 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 group-data-[collapsible=icon]:p-2">
-        <div className="rounded-lg bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 p-3 text-center group-data-[collapsible=icon]:hidden">
-          <Sparkles className="w-5 h-5 text-primary mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">
-            Eat healthy, earn points!
-          </p>
-        </div>
+      <SidebarFooter className="p-3 group-data-[collapsible=icon]:p-2">
+        <ChangeBuddySheet
+          trigger={
+            <button
+              className="w-full flex items-center gap-3 rounded-2xl p-3 transition-all hover:opacity-90 active:scale-95"
+              style={{
+                background: `linear-gradient(135deg, ${selectedBuddy.color}22, ${selectedBuddy.color}44)`,
+                border: `1.5px solid ${selectedBuddy.color}55`,
+              }}
+              data-testid="button-change-buddy"
+            >
+              <span className="text-2xl animate-buddy-bob inline-block shrink-0">
+                {selectedBuddy.emoji}
+              </span>
+              <div className="group-data-[collapsible=icon]:hidden text-left min-w-0">
+                <p className="font-display font-bold text-sm truncate" style={{ color: selectedBuddy.color }}>
+                  {selectedBuddy.name}
+                </p>
+                <p className="font-sans text-xs text-muted-foreground flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3" /> Change buddy
+                </p>
+              </div>
+            </button>
+          }
+        />
       </SidebarFooter>
     </Sidebar>
   );
