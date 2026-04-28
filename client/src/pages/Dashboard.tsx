@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,8 @@ import { WeeklyStats } from "@/components/WeeklyStats";
 import { FoodHistory } from "@/components/FoodHistory";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UtensilsCrossed, Award, History, ChevronRight, Sparkles, Apple, Carrot, Droplet, Star } from "lucide-react";
+import { useBuddy } from "@/context/BuddyContext";
+import { UtensilsCrossed, Award, History, ChevronRight, Sparkles, Apple, Carrot, Droplet, Star, Mic } from "lucide-react";
 import { Link } from "wouter";
 import type { Student, Badge as BadgeType, MealRecord, FoodItem, StudentBadge } from "@shared/schema";
 
@@ -33,6 +35,7 @@ export default function Dashboard() {
   const { data, isLoading, error } = useQuery<DashboardData>({
     queryKey: ["/api/dashboard"],
   });
+  const { selectedBuddy, getBuddyMessage, speakMessage, setBuddyState } = useBuddy();
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -50,24 +53,56 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-4xl mx-auto">
+      {/* Hero greeting */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4">
           <StudentAvatar name={data.student.name} size="lg" />
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold" data-testid="text-welcome">
-              Hi, {data.student.name}!
+            <h1 className="font-display text-2xl md:text-3xl font-extrabold" data-testid="text-welcome">
+              Hi, {data.student.name}! 👋
             </h1>
-            <p className="text-muted-foreground">Ready to make great food choices today?</p>
+            <p className="text-muted-foreground font-sans">Ready to make great food choices today?</p>
           </div>
         </div>
-        
         <Link href="/select-food">
-          <Button size="lg" data-testid="button-select-food">
+          <Button size="lg" className="rounded-full font-display font-bold" data-testid="button-select-food">
             <UtensilsCrossed className="w-5 h-5 mr-2" />
             Choose Food
           </Button>
         </Link>
       </div>
+
+      {/* Buddy Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, type: "spring", stiffness: 280, damping: 24 }}
+        className="relative overflow-hidden rounded-3xl p-5 flex items-center gap-4"
+        style={{
+          background: `linear-gradient(135deg, ${selectedBuddy.color}22, ${selectedBuddy.color}44)`,
+          border: `2px solid ${selectedBuddy.color}55`,
+        }}
+      >
+        <span className="text-5xl animate-buddy-bob inline-block shrink-0">{selectedBuddy.emoji}</span>
+        <div className="flex-1 min-w-0">
+          <p className="font-display font-bold text-gray-800 text-lg leading-snug">
+            {getBuddyMessage("morning")}
+          </p>
+          <p className="font-sans text-sm text-gray-500 mt-1">{selectedBuddy.name} is here to help!</p>
+        </div>
+        <button
+          onClick={() => {
+            speakMessage(getBuddyMessage("morning"));
+            setBuddyState("happy");
+            setTimeout(() => setBuddyState("idle"), 1500);
+          }}
+          className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-display font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+          style={{ backgroundColor: selectedBuddy.color }}
+        >
+          <Mic className="w-3 h-3" />
+          Talk to {selectedBuddy.name}
+        </button>
+      </motion.div>
 
       {data.alerts.length > 0 && (
         <div className="space-y-3">

@@ -97,7 +97,7 @@ function FullScreenConfetti({ active }: { active: boolean }) {
             ...p.shape,
             "--swing": `${p.swingAmt}px`,
             animation: `cfFall ${p.duration} ${p.delay} cubic-bezier(.25,.46,.45,.94) both`,
-          } as React.CSSProperties}
+          } as unknown as React.CSSProperties}
         />
       ))}
       {/* Extra burst of stars from center on open */}

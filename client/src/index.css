@@ -74,9 +74,22 @@
   --chart-4: 200 80% 55%;
   --chart-5: 340 75% 55%;
 
-  --font-sans: 'Poppins', sans-serif;
+  --font-sans: 'Quicksand', sans-serif;
+  --font-display: 'Nunito', sans-serif;
+  --font-numbers: 'Baloo 2', cursive;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
+
+  /* Blueprint color tokens */
+  --mint: #4ECDC4;
+  --sky-bubble: #74B9FF;
+  --lavender-soft: #A29BFE;
+  --fruit-pink: #FF6B9D;
+  --veggie-green: #00B894;
+  --grain-amber: #FDCB6E;
+  --snack-orange: #E17055;
+  --sweet-red: #D63031;
+  --blue-aqua: #0984E3;
   --radius: .75rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(45 30% 50% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(45 30% 50% / 0.00);
@@ -273,4 +286,86 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-numbers {
+    font-family: var(--font-numbers);
+  }
 }
+
+/* Blueprint animation keyframes */
+@keyframes buddy-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes buddy-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-14px) scale(1.05); }
+  50% { transform: translateY(0) scale(1); }
+  75% { transform: translateY(-7px) scale(1.02); }
+}
+
+@keyframes buddy-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.2); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  75% { transform: rotate(270deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes buddy-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-15deg); }
+}
+
+@keyframes buddy-droop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes slide-up-fade {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes badge-fly-in {
+  0% { transform: translateY(-60px) rotate(-10deg) scale(0.8); opacity: 0; }
+  60% { transform: translateY(6px) rotate(3deg) scale(1.1); opacity: 1; }
+  100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+}
+
+@keyframes gold-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-80px) scale(0.5); opacity: 0; }
+}
+
+@keyframes flame-flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-3deg); }
+  75% { transform: scale(0.95) rotate(3deg); }
+}
+
+.animate-buddy-bob { animation: buddy-bob 2s ease-in-out infinite; }
+.animate-buddy-bounce { animation: buddy-bounce 0.6s ease-in-out; }
+.animate-buddy-spin { animation: buddy-spin 0.7s ease-in-out; }
+.animate-buddy-tilt { animation: buddy-tilt 1.5s ease-in-out infinite; }
+.animate-buddy-droop { animation: buddy-droop 2s ease-in-out infinite; }
+.animate-pulse-ring { animation: pulse-ring 1.4s ease-out infinite; }
+.animate-slide-up { animation: slide-up-fade 0.2s ease-out; }
+.animate-badge-fly { animation: badge-fly-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-float-up { animation: float-up 0.8s ease-out forwards; }
+.animate-flame { animation: flame-flicker 0.4s ease-in-out infinite; }

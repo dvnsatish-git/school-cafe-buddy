@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +10,10 @@ import { FoodCard } from "@/components/FoodCard";
 import { RecommendationPopup } from "@/components/RecommendationPopup";
 import { CheckoutDialog } from "@/components/CheckoutDialog";
 import { SuccessDialog } from "@/components/SuccessDialog";
+import { VoiceMicButton } from "@/components/VoiceMicButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useBuddy } from "@/context/BuddyContext";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ShoppingCart, ArrowLeft, Sparkles, Star, Trash2, Receipt } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -27,12 +30,14 @@ interface FoodSelectionData {
 export default function FoodSelection() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { selectedBuddy, setBuddyState, getBuddyMessage, speakMessage } = useBuddy();
   const [selectedCategory, setSelectedCategory] = useState<FoodCategory>("all");
   const [mealType, setMealType] = useState<"breakfast" | "lunch" | "snack">("lunch");
   const [selectedFoods, setSelectedFoods] = useState<FoodItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<{
     newBadges: BadgeType[];
     allBadges: BadgeType[];
@@ -84,6 +89,10 @@ export default function FoodSelection() {
       setShowCart(false);
       setShowSuccess(true);
       setSelectedFoods([]);
+      setBuddyState("excited");
+      const checkoutMsg = getBuddyMessage("checkout");
+      speakMessage(checkoutMsg);
+      setTimeout(() => setBuddyState("idle"), 2500);
     },
     onError: () => {
       toast({
@@ -101,6 +110,8 @@ export default function FoodSelection() {
       setSelectedFoods(prev => prev.filter(f => f.id !== food.id));
     } else {
       setSelectedFoods(prev => [...prev, food]);
+      setBuddyState(food.isHealthy ? "happy" : "thinking");
+      setTimeout(() => setBuddyState("idle"), 1800);
 
       if (!food.isHealthy) {
         const rec = getRecommendationForFood(food.name);
@@ -109,6 +120,36 @@ export default function FoodSelection() {
         setPendingUnhealthyFoodId(food.id);
         setShowRecommendation(true);
       }
+    }
+  };
+
+  const handleVoiceOrder = (transcript: string) => {
+    if (!data?.foods) return;
+    const words = transcript.toLowerCase();
+    const matched: FoodItem[] = [];
+
+    data.foods.forEach(food => {
+      if (words.includes(food.name.toLowerCase())) {
+        if (!selectedFoods.some(f => f.id === food.id)) {
+          matched.push(food);
+        }
+      }
+    });
+
+    if (matched.length > 0) {
+      setSelectedFoods(prev => [...prev, ...matched]);
+      setBuddyState("excited");
+      setTimeout(() => setBuddyState("idle"), 1800);
+      const names = matched.map(f => f.name).join(", ");
+      const msg = `Got it! ${names} added! ${getBuddyMessage("addHealthy")}`;
+      setVoiceMessage(msg);
+      speakMessage(msg);
+      setTimeout(() => setVoiceMessage(null), 4000);
+    } else {
+      const msg = `Hmm, I didn't catch that. Try saying a food name like "apple" or "milk"!`;
+      setVoiceMessage(msg);
+      setBuddyState("thinking");
+      setTimeout(() => { setVoiceMessage(null); setBuddyState("idle"); }, 3500);
     }
   };
 
@@ -159,7 +200,7 @@ export default function FoodSelection() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-6">
+      <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-4">
           <Link href="/">
             <Button variant="ghost" size="icon" data-testid="button-back">
@@ -167,25 +208,48 @@ export default function FoodSelection() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Choose Your Food</h1>
-            <p className="text-muted-foreground">Pick healthy options to earn more points!</p>
+            <h1 className="font-display text-2xl font-bold">Choose Your Food 🍽️</h1>
+            <p className="text-muted-foreground font-sans text-sm">Pick healthy options to earn more points!</p>
           </div>
         </div>
-        {/* Cart icon button */}
         <Button
           variant="outline"
-          className="relative"
+          className="relative rounded-full"
           onClick={() => setShowCart(v => !v)}
           data-testid="button-toggle-cart"
         >
           <ShoppingCart className="w-5 h-5 mr-2" />
           Cart
           {selectedFoods.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+            <motion.span
+              key={selectedFoods.length}
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+            >
               {selectedFoods.length}
-            </span>
+            </motion.span>
           )}
         </Button>
+      </div>
+
+      {/* Voice ordering section */}
+      <div className="mb-6 p-4 rounded-2xl border-2 border-dashed border-[#4ECDC4]/40 bg-[#4ECDC4]/5 flex flex-col items-center gap-2">
+        <p className="font-display font-semibold text-gray-600 text-sm">🎤 Speak your order!</p>
+        <VoiceMicButton onResult={handleVoiceOrder} onListeningChange={(l) => l && setBuddyState("excited")} />
+        <AnimatePresence>
+          {voiceMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="text-sm font-display font-semibold text-center px-3 py-2 rounded-xl text-white max-w-xs"
+              style={{ background: `linear-gradient(135deg, ${selectedBuddy.color}, ${selectedBuddy.color}99)` }}
+            >
+              {selectedBuddy.emoji} {voiceMessage}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex gap-6">

@@ -54,7 +54,8 @@
       "WebFetch(domain:www.svtemple.org)",
       "WebFetch(domain:www.ganapathitemple.org)",
       "WebFetch(domain:www.livermoretemple.org)",
-      "WebFetch(domain:www.svbf.org)"
+      "WebFetch(domain:www.svbf.org)",
+      "Bash(git checkout *)"
     ]
   }
 }
