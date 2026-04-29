@@ -379,7 +379,7 @@ export default function FoodSelection() {
 
       {/* Mobile: fixed bottom cart bar */}
       {selectedFoods.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 md:hidden p-4 bg-background/95 backdrop-blur border-t space-y-2">
+        <div className="fixed bottom-0 left-0 right-0 md:hidden p-4 bg-background/95 backdrop-blur border-t space-y-2 z-[55]">
           {showCart && (
             <div className="bg-card border rounded-xl p-4 mb-2 max-h-60 overflow-y-auto space-y-2">
               {selectedFoods.map(food => (

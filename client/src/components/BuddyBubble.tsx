@@ -55,7 +55,7 @@ export function BuddyBubble() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2" style={{ pointerEvents: "none" }}>
       {/* Change buddy button — small, above the bubble */}
       <ChangeBuddySheet
         trigger={
